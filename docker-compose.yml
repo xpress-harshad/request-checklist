@@ -1,0 +1,24 @@
+services:
+  app:
+    build:
+      context: "${FILE_REQUEST_SOURCE:-https://github.com/xpress-harshad/request-checklist.git#main}"
+    restart: unless-stopped
+    environment:
+      FILE_REQUEST_ORIGIN: "https://${FILE_REQUEST_DOMAIN:?Set FILE_REQUEST_DOMAIN}"
+      FILE_REQUEST_PASSWORD: "${FILE_REQUEST_PASSWORD:?Set FILE_REQUEST_PASSWORD}"
+      FILE_REQUEST_MAX_MB: "${FILE_REQUEST_MAX_MB:-25}"
+      FILE_REQUEST_STORAGE_MB: "${FILE_REQUEST_STORAGE_MB:-2048}"
+    volumes:
+      - requests:/app/data
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: ["caddy", "reverse-proxy", "--from", "https://${FILE_REQUEST_DOMAIN:?Set FILE_REQUEST_DOMAIN}", "--to", "app:3000"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - tls:/data
+volumes:
+  requests:
+  tls:
